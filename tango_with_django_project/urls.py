@@ -1,4 +1,5 @@
-from django.conf.urls import include, url
+from django.conf import settings
+from django.conf.urls import include, url, patterns
 from django.contrib import admin
 
 urlpatterns = [
@@ -9,3 +10,10 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^rango/', include('rango.urls')), # add in 2015/5/1
 ]
+
+if settings.DEBUG:
+    urlpatterns += patterns(
+        'django.views.static',
+        (r'^media/(?P<path>.*)',
+        'serve',
+        {'document_root': settings.MEDIA_ROOT}), )
