@@ -1,2 +1,4 @@
 *.pyc
 rango/migrations/*
+*.sublime-project
+*.sublime-workspace
