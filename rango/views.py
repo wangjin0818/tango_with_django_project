@@ -11,24 +11,98 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
+from datetime import datetime
 
 def index(request):
+    # test the cookie
+    # request.session.set_test_cookie()
+
     # Construct a dictionary to pass to the template engine as its context.
     # Note the key boldmessage is the same as {{ boldmessage }} in the template!
     # context_dict = {'boldmessage': "I am bold font from the context."}
     category_list = Category.objects.order_by('-likes')[:5]
-    context_dict = {'categories': category_list}
+    page_list = Page.objects.order_by('-views')[:5]
+    context_dict = {'categories': category_list, 'pages': page_list}
+    '''
+    # Get the number of visits to the site
+    # We use the COOKIE.get() function to obtain the visits cookie.
+    # If the cookie exists, the value returned is casted to an integer.
+    # If the cookie doesn't exist, we default to zero and cast that.
+    visits = int(request.COOKIES.get('visits', '1'))
+
+    reset_last_visit_time = False
+    response = render(request, 'rango/index.html', context_dict)
+    # Does the cookie last_visit exist?
+    if 'last_visit' in request.COOKIES:
+        # Yes it does! Get the cookie's value
+        last_visit = request.COOKIES['last_visit']
+        # Cast the value to a Python data/time object.
+        last_visit_time = datetime.strptime(last_visit[:-7], "%Y-%m-%d %H:%M:%S")
+
+        # If it's been more than a day since the last visit...
+        if (datetime.now() - last_visit_time).days > 0:
+            visits = visits + 1
+            # ... and flag that the cookie last visit needs to be updated
+            reset_last_visit_time = True
+    else:
+        # Cookie last_visit doesn't exists, so flag that it should be set.
+        reset_last_visit_time = True
+
+        context_dict['visits'] = visits
+
+        # Obtain our Response object early so we can add cookie information.
+        response = render(request, 'rango/index.html', context_dict)
+
+    if reset_last_visit_time:
+        response.set_cookie('last_visit', datetime.now())
+        response.set_cookie('visits', visits)
 
     # Return a rendered response to send to the client.
     # We make use of the shortcut function to make our lives easier.
     # Note that the first parameter is the template we wish to use.
-    return render(request, 'rango/index.html', context_dict)
+    return response
+    '''
+
+    visits = request.session.get('visits')
+    if not visits:
+        visits = 1
+    reset_last_visit_time = False
+
+    last_visit = request.session.get('last_visit')
+    if last_visit:
+        last_visit_time = datetime.strptime(last_visit[:-7], "%Y-%m-%d %H:%M:%S")
+
+        # If it's been more than a day since the last visit...
+        if (datetime.now() - last_visit_time).days > 0:
+            visits = visits + 1
+            # ... and flag that the cookie last visit needs to be updated
+            reset_last_visit_time = True
+    else:
+        # Cookie last_visit doesn't exists, so flag that it should be set.
+        reset_last_visit_time = True
+
+    if reset_last_visit_time:
+        request.session['last_visit'] = str(datetime.now())
+        request.session['visits'] = visits
+    context_dict['visits'] = visits
+
+    response = render(request, 'rango/index.html', context_dict)
+
+    return response    
 
 # exercises
 def about(request):
-	context_dict = {'aboutmessage': "here is the about page."}
+    context_dict = {'aboutmessage': "here is the about page."}
 
-	return render(request, 'rango/about.html', context_dict)
+    # If the visits session variable exists, take it and use it.
+    # If it doesn't, we haven't visited the site so set the count to zero
+    if request.session.get('visits'):
+        count = request.session.get('visits')
+    else:
+        count = 0
+    context_dict = {'visits': count}
+
+    return render(request, 'rango/about.html', context_dict)
 
 # 7.3.3 Category Page Workflow
 def category(request, category_name_slug):
@@ -114,6 +188,12 @@ def add_page(request, category_name_slug):
     return render(request, 'rango/add_page.html', context_dict)
 
 def register(request):
+    # test the cookie
+    '''
+    if request.session.test_cookie_worked():
+        print ">>>> TEST COOKIE WORKED!"
+        request.session.delete_test_cookie()
+    '''
 
     # A boolean value for telling the template whether the registration was successful.
     # Set to False initially. Code changes value to True when registration succeeds.
