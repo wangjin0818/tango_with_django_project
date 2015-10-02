@@ -167,6 +167,8 @@ def add_page(request, category_name_slug):
     except Category.DoesNotExist:
         cat = None
 
+    print category_name_slug
+    print cat
     if request.method == 'POST':
         form = PageForm(request.POST)
         if form.is_valid():
