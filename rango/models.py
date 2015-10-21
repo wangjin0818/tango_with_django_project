@@ -37,5 +37,6 @@ class UserProfile(models.Model):
 	picture = models.ImageField(upload_to='profile_images', blank=True)
 
 	# Override the __unicode__() method to return out something meaningful
+	# change submit
 	def __unicode__(self):
 		return self.user.username
